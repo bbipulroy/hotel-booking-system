@@ -69,6 +69,7 @@ class Booking extends CI_Controller {
 		$this->db->trans_start();
 
 		$this->db->insert('bookings', $form_data);
+		$booking_id = $this->db->insert_id();
 
 		$this->db->set('locked', 1);
 		$this->db->where('id', $form_data['room_id']);
@@ -76,7 +77,7 @@ class Booking extends CI_Controller {
 
 		if($pay_amount) {
 			$payment_data = [
-				'booking_id' => $this->db->insert_id(),
+				'booking_id' => $booking_id,
 				'customer_id' => $form_data['customer_id'],
 				'amount' => $pay_amount,
 				'date' => time(),
@@ -204,15 +205,36 @@ class Booking extends CI_Controller {
 		$this->form_validation->set_rules('booking_id', 'Booking ID', 'required');
 
 		if($this->form_validation->run() === true) {
+			$booking_id = $this->input->post('booking_id');
+
+			$this->db->select('room_id')
+				->from('bookings')
+				->where('status', 1)
+				->where('id', $booking_id);
+			$result = $this->db->get()->row_array();
+			if(!$result) {
+				exit(json_encode([ 'status' => false ]));
+			}
+
 			$this->db->trans_start();
 
-			$this->db->where('id', $this->input->post('booking_id'));
+			$this->db->set('locked', 0);
+			$this->db->where('id', $result['room_id']);
+			$this->db->update('rooms');
+
+			$this->db->where('id', $booking_id);
 			$status = $this->db->update('bookings', [ 'status' => 0 ]);
 
-			if($status) {
+			$this->db->where('booking_id', $booking_id);
+			$this->db->update('payments', [ 'status' => 0 ]);
+
+			$this->db->trans_complete();
+			if($this->db->trans_status()) {
+				$this->db->trans_commit();
 				echo json_encode([ 'status' => true ]);
 			}
 			else {
+				$this->db->trans_rollback();
 				echo json_encode([ 'status' => false ]);
 			}
         }
