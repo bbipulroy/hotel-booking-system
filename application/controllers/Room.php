@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Room extends CI_Controller {
+class Room extends Root_Controller {
 	public function index() {
 		echo json_encode([ 'status' => false ]);
 	}
