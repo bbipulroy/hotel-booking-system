@@ -59,6 +59,16 @@ class Booking extends CI_Controller {
 			exit(json_encode([ 'status' => false ]));
 		}
 
+		// checking for only one room book for one customer
+		$this->db->select('COUNT(id) total_booked')
+			->from('bookings')
+			->where('status', 1)
+			->where('customer_id', $form_data['customer_id']);
+		$result_total_booked = $this->db->get()->row_array();
+		if($result_total_booked['total_booked'] > 0) {
+			exit(json_encode([ 'status' => false, 'error_type' => 'one_customer_can_book_one_room_only' ]));
+		}
+
 		$pay_amount = $this->input->post('pay_amount');
 		if($pay_amount) {
 			if(ceil($pay_amount) >= floor($room_price)) {
