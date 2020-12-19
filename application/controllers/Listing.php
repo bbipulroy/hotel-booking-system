@@ -11,7 +11,7 @@ class Listing extends Root_Controller {
 			) total_paid
 			FROM bookings b
 			INNER JOIN customers c ON c.id = b.customer_id
-			INNER JOIN rooms r ON r.id = r.room_number
+			INNER JOIN rooms r ON r.id = b.room_id
 			WHERE b.status = 1
 			ORDER BY b.id ASC
 		';
