@@ -36,7 +36,7 @@ class Payment extends CI_Controller {
 				exit(json_encode([ 'status' => false, 'error_type' => 'already_paid' ]));
 			}
 
-			$this->db->trans_start();
+			$this->db->trans_begin();
 
 			$this->db->select('SUM(amount) total_paid')
 				->from('payments')
@@ -52,11 +52,14 @@ class Payment extends CI_Controller {
 
 				$is_paid = true;
 			}
+			else {
+				// extra checking, if not need then comment else codes just
+				$this->db->trans_rollback();
+				exit(json_encode([ 'status' => false, 'error_type' => 'not_due_on_checkout_time' ]));
+			}
 
 			$this->db->insert('payments', $form_data);
 			$insert_id = $this->db->insert_id();
-
-			$this->db->trans_complete();
 
 			if($this->db->trans_status()) {
 				$this->db->trans_commit();
