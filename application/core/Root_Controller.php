@@ -5,6 +5,9 @@ class Root_Controller extends CI_Controller {
     public function __construct() {
         parent::__construct();
 
+        // json response
+        header('Content-Type: application/json');
+
         if(!(isset($_SERVER['HTTP_DEVICE_ID']) && isset($_SERVER['HTTP_SECURITY_TOKEN']))) {
             exit(json_encode([
                 'status' => false,
